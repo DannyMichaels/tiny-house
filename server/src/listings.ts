@@ -5,7 +5,7 @@ interface Listing {
   address: string;
   price: number;
   numOfGuests: number;
-  numofBeds: number;
+  numOfBeds: number;
   numOfBaths: number;
   rating: number;
 }
