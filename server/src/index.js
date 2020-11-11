@@ -2,8 +2,17 @@ const express = require("express");
 const app = express();
 const port = 9000;
 
-app.get("/", (req, res) => res.send("Hello World"));
+const one = 1;
+let two = 2;
+
+two = 'two'
+
+app.get("/", (req, res) => res.send(`1 + 2 = ${one + two}`));
 
 app.listen(port);
 
 console.log(`[app]: http://localhost:${port}`)
+
+//npm install typescript ts-node -D
+// ts-node will help me run typescript code directly from the terminal.
+// next I have to make a tsconfig.json file
