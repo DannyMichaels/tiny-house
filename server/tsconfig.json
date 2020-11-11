@@ -8,3 +8,7 @@
     "strict": true
   }
 }
+
+// to use 3rd party libararies such as node, those libraries should also have dynamic types.
+// this is where TypeScript allows the creation of declaration files.
+// npm install -D @types/node @types/express (for TS to work with node and express)
