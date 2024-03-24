@@ -1,12 +1,41 @@
-import express from "express";
-import { ApolloServer } from "apollo-server-express";
-import { typeDefs, resolvers } from "./graphql";
-const app = express();
+import express from 'express';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import http from 'http';
+import { typeDefs, resolvers } from './graphql';
+import cors from 'cors';
+import { dbConnect } from './database/connection';
+import { Database } from './lib/types';
+
 const port = 9000;
 
-const server = new ApolloServer({ typeDefs, resolvers });
-server.applyMiddleware({ app, path: "/api" });
+const mount = async () => {
+  const db: Database = await dbConnect();
+  const app = express();
 
-app.listen(port);
+  app.use(express.json());
+  app.use(cors());
 
-console.log(`[app]: http://localhost:${port}`);
+  const httpServer = http.createServer(app);
+
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  });
+
+  await server.start();
+
+  app.use(
+    expressMiddleware(server, {
+      context: async ({ req, res }) => ({ req, res, db }),
+    })
+  );
+
+  httpServer.listen({ port: port }, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+  });
+};
+
+mount();

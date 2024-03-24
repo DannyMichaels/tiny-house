@@ -1,34 +1,42 @@
-import { IResolvers } from 'apollo-server-express';
-import { Listing, listings } from '../listings';
+// import { IResolvers } from 'apollo-server-express';
+import { Database, Listing as TListing } from '../lib/types';
+import { WithId } from 'mongodb';
 
-export const resolvers: IResolvers = {
+export const resolvers = {
   Query: {
-    listings: (): Listing[] => {
-      return listings;
+    listings: async (
+      _root: undefined,
+      _: unknown,
+      { db }: { db: Database }
+    ): Promise<WithId<TListing[]>[]> => {
+      return await db.listings.find({}).toArray();
     },
   },
   Mutation: {
-    createListing: (
+    deleteListing: async (
       _root: undefined,
-      { input }: { input: Partial<Listing> }
-    ): Listing | Error => {
-      const id = String(listings.length + 1);
-      const newListing = { id, ...input } as Listing;
-      listings.push(newListing);
-      return newListing;
-    },
+      { _id }: { _id: TListing['_id'] },
+      { db }: { db: Database }
+    ): Promise<IterableIterator<TListing>> => {
+      const deletedListing = await db.listings.findOneAndDelete({ _id });
 
-    deleteListing: (
-      _root: undefined,
-      { id }: { id: string }
-    ): Listing | Error => {
-      for (let i = 0; i < listings.length; i++) {
-        if (listings[i].id === id) {
-          return listings.splice(i, 1)[0];
-        }
+      if (!deletedListing?.values?.()) {
+        throw new Error('failed to delete listing');
       }
 
-      throw new Error('failed to deleted listing');
+      return deletedListing.values();
     },
   },
+
+  // Listing: {
+  //   _id: (listing: TListing): string => listing._id.toString(),
+  //   title: (listing: TListing): string => listing.title.toString(),
+  //   image: (listing: TListing): string => listing.image.toString(),
+  //   address: (listing: TListing): string => listing.address.toString(),
+  //   price: (listing: TListing): number => listing.price,
+  //   numOfGuests: (listing: TListing): number => listing.numOfGuests,
+  //   numOfBeds: (listing: TListing): number => listing.numOfBeds,
+  //   numOfBaths: (listing: TListing): number => listing.numOfBaths,
+  //   rating: (listing: TListing): number => listing.rating,
+  // },
 };
