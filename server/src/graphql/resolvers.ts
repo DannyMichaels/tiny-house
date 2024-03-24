@@ -1,6 +1,5 @@
-// import { IResolvers } from 'apollo-server-express';
 import { Database, Listing as TListing } from '../lib/types';
-import { WithId } from 'mongodb';
+import { WithId, ObjectId } from 'mongodb';
 
 export const resolvers = {
   Query: {
@@ -15,16 +14,19 @@ export const resolvers = {
   Mutation: {
     deleteListing: async (
       _root: undefined,
-      { _id }: { _id: TListing['_id'] },
+      { _id }: { _id: string },
       { db }: { db: Database }
-    ): Promise<IterableIterator<TListing>> => {
-      const deletedListing = await db.listings.findOneAndDelete({ _id });
+    ): Promise<WithId<TListing>[]> => {
+      const objectId = new ObjectId(_id);
+      const deletedListing = await db.listings.findOneAndDelete({
+        _id: objectId,
+      });
 
-      if (!deletedListing?.values?.()) {
+      if (!deletedListing?._id) {
         throw new Error('failed to delete listing');
       }
 
-      return deletedListing.values();
+      return deletedListing;
     },
   },
 

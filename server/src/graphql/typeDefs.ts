@@ -29,7 +29,7 @@ export const typeDefs = gql`
   }
 
   type Mutation {
-    deleteListing(id: ID!): Listing!
+    deleteListing(_id: ID!): Listing!
     createListing(input: ListingInput!): Listing!
   }
 `;
