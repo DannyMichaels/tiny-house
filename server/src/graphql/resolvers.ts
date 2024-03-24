@@ -39,6 +39,7 @@ export const resolvers = {
       { _id }: { _id: string },
       { db }: { db: Database }
     ): Promise<WithId<TListing[]>> => {
+      console.log('deleting listing', _id);
       const objectId = new ObjectId(_id);
       const deletedListing = await db.listings.findOneAndDelete({
         _id: objectId,
