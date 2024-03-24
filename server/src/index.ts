@@ -28,6 +28,7 @@ const mount = async () => {
   await server.start();
 
   app.use(
+    '/api',
     expressMiddleware(server, {
       context: async ({ req, res }) => ({ req, res, db }),
     })
