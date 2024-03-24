@@ -28,15 +28,15 @@ export const resolvers = {
     },
   },
 
-  // Listing: {
-  //   _id: (listing: TListing): string => listing._id.toString(),
-  //   title: (listing: TListing): string => listing.title.toString(),
-  //   image: (listing: TListing): string => listing.image.toString(),
-  //   address: (listing: TListing): string => listing.address.toString(),
-  //   price: (listing: TListing): number => listing.price,
-  //   numOfGuests: (listing: TListing): number => listing.numOfGuests,
-  //   numOfBeds: (listing: TListing): number => listing.numOfBeds,
-  //   numOfBaths: (listing: TListing): number => listing.numOfBaths,
-  //   rating: (listing: TListing): number => listing.rating,
-  // },
+  Listing: {
+    _id: (listing: TListing): string => listing._id.toString(),
+    title: (listing: TListing): string => listing.title.toString(),
+    image: (listing: TListing): string => listing.image.toString(),
+    address: (listing: TListing): string => listing.address.toString(),
+    price: (listing: TListing): number => listing.price,
+    numOfGuests: (listing: TListing): number => listing.numOfGuests,
+    numOfBeds: (listing: TListing): number => listing.numOfBeds,
+    numOfBaths: (listing: TListing): number => listing.numOfBaths,
+    rating: (listing: TListing): number => listing.rating,
+  },
 };
