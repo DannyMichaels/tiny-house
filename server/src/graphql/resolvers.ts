@@ -1,5 +1,5 @@
-import { Database, Listing as TListing } from '../lib/types';
-import { WithId, ObjectId } from 'mongodb';
+import { Database, TListing, CreateListingInput } from '../lib/types';
+import { WithId, ObjectId, OptionalId } from 'mongodb';
 
 export const resolvers = {
   Query: {
@@ -12,11 +12,33 @@ export const resolvers = {
     },
   },
   Mutation: {
+    createListing: async (
+      _root: undefined,
+      { input }: { input: CreateListingInput },
+      { db }: { db: Database }
+    ): Promise<WithId<TListing[]> | null> => {
+      console.log('creating listing');
+
+      const newListing = await db.listings.insertOne(
+        input as unknown as OptionalId<TListing[]>
+      );
+
+      console.log('newListing', newListing);
+      if (!newListing.insertedId) {
+        throw new Error('failed to create listing');
+      }
+
+      const listing = await db.listings.findOne({
+        _id: newListing.insertedId,
+      });
+
+      return listing;
+    },
     deleteListing: async (
       _root: undefined,
       { _id }: { _id: string },
       { db }: { db: Database }
-    ): Promise<WithId<TListing>[]> => {
+    ): Promise<WithId<TListing[]>> => {
       const objectId = new ObjectId(_id);
       const deletedListing = await db.listings.findOneAndDelete({
         _id: objectId,
@@ -31,7 +53,8 @@ export const resolvers = {
   },
 
   Listing: {
-    _id: (listing: TListing): string => listing._id.toString(),
+    _id: (listing: TListing): string =>
+      listing._id ? listing._id.toString() : '',
     title: (listing: TListing): string => listing.title.toString(),
     image: (listing: TListing): string => listing.image.toString(),
     address: (listing: TListing): string => listing.address.toString(),
