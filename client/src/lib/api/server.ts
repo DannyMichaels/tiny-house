@@ -14,6 +14,10 @@ export const server = {
     });
 
     const json = await response.json();
-    return json.data as TData;
+
+    return {
+      data: json.data as TData,
+      errors: json.errors,
+    };
   },
 };

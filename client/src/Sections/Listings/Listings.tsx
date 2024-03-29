@@ -1,17 +1,15 @@
-import { server } from '../../lib/api/server';
 import {
-  Listing,
   DeleteListingData,
   DeleteListingVariables,
   ListingsData,
 } from './types';
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation } from '../../hooks';
 
 interface TListingsProps {
   title: string;
 }
 
-const GET_LISTINGS = `
+const LISTINGS = `
   query {
     listings {
       _id
@@ -42,51 +40,55 @@ const DELETE_LISTING = `
 `;
 
 export const Listings = ({ title }: TListingsProps): JSX.Element => {
-  const [listings, setListings] = useState<Listing[] | []>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { data, refetch, loading } = useQuery<ListingsData>(LISTINGS);
 
-  const fetchListings = async () => {
-    const data = await server.fetch<ListingsData>({ query: GET_LISTINGS });
-    setListings(data.listings);
-    setIsLoading(false);
+  const [
+    deleteListing,
+    { loading: deleteListingLoading, error: deleteListingError },
+  ] = useMutation<DeleteListingData, DeleteListingVariables>(DELETE_LISTING);
+
+  const listings = data ? data.listings : [];
+
+  const handleDeleteListing = async (id: string) => {
+    const { data } = await deleteListing({ id });
+    console.log({ data });
+    if (data?.deleteListing?._id) {
+      refetch();
+    }
   };
 
-  const deleteListing = async (id: string) => {
-    const data = await server.fetch<DeleteListingData, DeleteListingVariables>({
-      query: DELETE_LISTING,
-      variables: { id },
-    });
-
-    setListings((prevListings) => {
-      return prevListings.filter(
-        (listing) => listing._id !== data.deleteListing._id
-      );
-    });
-  };
-
-  useEffect(() => {
-    fetchListings();
-  }, []);
-
-  if (isLoading) {
+  if (loading) {
     return <h2>Loading...</h2>;
   }
+
+  const deleteListingLoadingMessage = deleteListingLoading ? (
+    <h4>Deleting...</h4>
+  ) : null;
+
+  const deleteListingErrorMessage = deleteListingError ? (
+    <h4>Failed to delete listing. Please try again later.</h4>
+  ) : null;
+
+  const listingsJSX = (
+    <ul>
+      {listings.map((listing) => (
+        <li key={listing._id}>
+          {listing.title}
+          <button onClick={() => handleDeleteListing(listing._id)}>
+            Delete
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <div>
       <h2>{title}</h2>
 
-      {/* <button onClick={fetchListings}>Query Listings!</button> */}
-      {/* <button onClick={() => deleteListing('a')}>Delete Listing!</button> */}
-
-      <ul>
-        {listings.map((listing) => (
-          <li key={listing._id}>
-            {listing.title}
-            <button onClick={() => deleteListing(listing._id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
+      {listingsJSX}
+      {deleteListingLoadingMessage}
+      {deleteListingErrorMessage}
     </div>
   );
 };
