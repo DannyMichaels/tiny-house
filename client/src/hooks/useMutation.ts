@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useReducer, useState } from 'react';
 import { server } from '../lib/api/server';
 
 interface State<TData> {
@@ -22,17 +22,52 @@ const initialState = {
   error: false,
 };
 
+type Action<TData> =
+  | { type: 'FETCH' }
+  | { type: 'FETCH_SUCCESS'; payload: TData }
+  | { type: 'FETCH_ERROR' };
+
+const reducer = <TData>(
+  state: State<TData>,
+  action: Action<TData>
+): State<TData> => {
+  switch (action.type) {
+    case 'FETCH':
+      return {
+        ...state,
+        loading: true,
+      };
+    case 'FETCH_SUCCESS':
+      return {
+        data: action.payload,
+        loading: false,
+        error: false,
+      };
+    case 'FETCH_ERROR':
+      return {
+        ...state,
+        loading: false,
+        error: true,
+      };
+
+    default:
+      throw new Error(`Action type not found`);
+  }
+};
+
 export const useMutation = <TData = any, TVariables = any>(
   query: string
 ): MutationTuple<TData, TVariables> => {
-  const [state, setState] = useState<State<TData>>(initialState);
+  // const [state, setState] = useState<State<TData>>(initialState);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   const fetch = async (variables?: TVariables) => {
     try {
-      setState({
-        ...initialState,
-        loading: true,
-      });
+      // setState({
+      //   ...initialState,
+      //   loading: true,
+      // });
+      dispatch({ type: 'FETCH' });
 
       const { data, errors } = await server.fetch<TData, TVariables>({
         query,
@@ -40,14 +75,11 @@ export const useMutation = <TData = any, TVariables = any>(
       });
 
       if (errors && errors.length) {
+        dispatch({ type: 'FETCH_ERROR' });
         throw new Error(errors[0].message);
       }
 
-      setState({
-        data,
-        loading: false,
-        error: false,
-      });
+      dispatch({ type: 'FETCH_SUCCESS', payload: data });
 
       return {
         data,
@@ -55,14 +87,10 @@ export const useMutation = <TData = any, TVariables = any>(
         error: false,
       };
     } catch (error) {
-      setState({
-        data: null,
-        loading: false,
-        error: true,
-      });
+      dispatch({ type: 'FETCH_ERROR' });
       throw console.error(error);
     }
   };
 
-  return [fetch, state];
+  return [fetch, state as State<TData>];
 };
